@@ -9,14 +9,16 @@ class App extends Component {
             userTextPrompt: "",
             isSubmitted: false,
             results: [],
+            engine: 'curie',
         }
         this.handleUserInput = this.handleUserInput.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleSelectOption = this.handleSelectOption.bind(this);
     }
 
     async componentDidMount() {
-        if (this.state.isSubmitted === true) {
-            const response = await (await getPrompt(this.state.userTextPrompt)).json();
+        if (this.state.isSubmitted === true && this.state.userTextPrompt !== '') {
+            const response = await (await getPrompt(this.state.userTextPrompt, this.state.engine)).json();
             let item = {
                 prompt: this.state.userTextPrompt,
                 responseText: response.choices[0].text
@@ -38,6 +40,10 @@ class App extends Component {
         this.setState({ userTextPrompt: event.target.value });
     }
 
+    handleSelectOption(event) {
+        this.setState({ engine: event.target.value });
+    }
+
     handleSubmit(event) {
         event.preventDefault();
         if (this.state.userTextPrompt !== '') {
@@ -47,35 +53,45 @@ class App extends Component {
 
     render() {
         this.componentDidMount();
-
         return (
             <div>
                 <div><h1>Fun with AI</h1></div>
-                <form onSubmit={this.handleSubmit}>
-                    <label>
+                <div style={{ padding: 20 }}>
+                    <form onSubmit={this.handleSubmit}>
+                        <label>
+                            Pick your engine:
+                            <br></br>
+                            <select value={this.state.engine} onChange={this.handleSelectOption}>
+                                <option value="curie">Curie</option>
+                                <option value="babbage">Babbage</option>
+                                <option value="ada">Ada</option>
+                            </select>
+                        </label>
+                        <br></br>
                         <input
                             type="text"
                             value={this.state.userTextPrompt}
                             onChange={this.handleUserInput}
                             placeholder="Send prompt..."
                         />
-                    </label>
-                    <input type="submit" value="Submit" />
-                </form>
-                <div><h2>Responses:</h2></div>
-                <ul>
-                    {this.state.results.map((response, index) => {
-                        return (
-                            <div key={index}>
-                                <li><b>Prompt:</b> {response.prompt}
+                        <input type="submit" value="Submit" />
+                    </form>
+                    {this.state.results.length > 0 && <div><h2>Responses:</h2></div>}
+                    <ul>
+                        {this.state.results.map((response, index) => {
+                            return (
+                                <div key={index}>
+                                    <li><b>Prompt:</b> {response.prompt}
+                                        <br></br>
+                                        <b>Response:</b> {response.responseText}
+                                    </li>
                                     <br></br>
-                                    <b>Response:</b> {response.responseText}
-                                </li>
-                                <br></br>
-                            </div>
-                        );
-                    })}
-                </ul>
+                                </div>
+                            );
+                        })}
+                    </ul>
+                </div>
+
             </div>
         );
     }
@@ -83,8 +99,7 @@ class App extends Component {
 
 export default App;
 
-const getPrompt = async (prompt) => {
-
+const getPrompt = async (prompt, engine) => {
     const secret = process.env.REACT_APP_SECRET_KEY;
     const data = {
         prompt: prompt,
@@ -95,7 +110,7 @@ const getPrompt = async (prompt) => {
         presence_penalty: 0.0,
     };
     try {
-        const response = await fetch("https://api.openai.com/v1/engines/text-curie-001/completions", {
+        const response = await fetch(`https://api.openai.com/v1/engines/text-${engine}-001/completions`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -109,6 +124,6 @@ const getPrompt = async (prompt) => {
         }
 
     } catch (e) {
-        console.error('Something went wrong.')
+        console.log('Something went wrong...')
     }
 }
