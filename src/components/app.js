@@ -8,7 +8,7 @@ class App extends Component {
         this.state = {
             userTextPrompt: "",
             results: [],
-            engine: "curie"
+            engine: "curie",
         };
         this.handleUserInput = this.handleUserInput.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -31,14 +31,14 @@ class App extends Component {
                 this.state.engine
             );
 
-            let item = {
+            let responseToRender = {
                 prompt: this.state.userTextPrompt,
                 responseText: response.choices[0].text,
                 engine: this.state.engine,
             };
 
             let newResults = this.state.results.slice();
-            newResults.unshift(item);
+            newResults.unshift(responseToRender);
 
             this.setState({
                 userTextPrompt: "",
